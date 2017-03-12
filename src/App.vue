@@ -9,14 +9,19 @@
 </template>
 
 <script>
-
+import WebStorage from './common/webStorage.js'
 export default {
   name: 'app',
   data: function(){
      return {
         newTodo: '',    //新增的任务项
-        todos: []       //任务项列表
+        todos: WebStorage("todos-vuejs").fetch()       //任务项列表
      }
+  },
+  watch: {
+      todos: function(todos){
+          WebStorage("todos-vuejs").save(todos)
+      }
   },
   methods: {
       addTodo: function(){
