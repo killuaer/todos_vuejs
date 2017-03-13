@@ -9,14 +9,19 @@
 </template>
 
 <script>
-
+import WebStorage from './common/webStorage.js'
 export default {
   name: 'app',
   data: function(){
      return {
         newTodo: '',    //新增的任务项
-        todos: []       //任务项列表
+        todos: WebStorage("todos-vuejs").fetch()       //任务项列表
      }
+  },
+  watch: {
+      todos: function(todos){
+          WebStorage("todos-vuejs").save(todos)
+      }
   },
   methods: {
       addTodo: function(){
@@ -50,14 +55,14 @@ h2 { font-size: 2em }
   height: 45px;
   font-size: 1.8em;
   text-indent: 15px;
-  border-left: 0px;
-  border-right: 0px;
   padding: 0px
 }
 .todo-ul{
   list-style: none;
   padding: 0px;
   margin: 0px;
+  margin-right: -2px;
+  border: 1px solid #DDD;
 }
 .todo-li{
   font-size: 1.6em;
