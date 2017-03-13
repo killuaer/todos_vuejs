@@ -69,7 +69,49 @@ npm run build
 详细介绍可以查看官方文档 [#watch](http://cn.vuejs.org/v2/api/#watch)
 
 **tips: vue不能检测到对象属性的添加或删除，因此属性必须在data对象上存在，它才能响应式变化。**
+
 按照之前的例子，就是之前已存在的todo中没有completed属性，所以这个todo就不能响应式变化，也就是不能切换任务状态，而新增加的todo，在添加到todos前就存在了completed属性，它能正常的响应式变化，具体内容参考:[响应式原理](http://cn.vuejs.org/v2/guide/reactivity.html)
+
+
+## step4：动态显示按钮及删除任务
+### 目标
+1. 动态显示任务删除按钮
+2. 为按钮添加任务删除事件
+
+### 实施内容
+1. 添加一个按钮，默认不显示，再通过CSS的伪类选择器:hover来切换隐藏和显示（vue的@mouseenter+@mouseleave同样可以实现类似为类:hover效果）
+2. 添加removeTodo(todo)方法，它接收todo对象，然后通过indexOf找到在任务数组中的位置，再通过splice方法移除该项，数据会响应式存储(watch)
+
+### 实施要点
+1. 从任务列表中移除任务，要先找到任务的位置，需要注意的是，indexOf判断的是对象的引用，因为都是来自同一个数组，所以才能找到位置
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
