@@ -17,7 +17,7 @@ npm run build
 ```
 
 
-## step1
+## step1：添加任务和显示任务
 ### 目标
 1. HTML页面结构--- div、h2、input、ul
 2. 为input元素添加新增任务的方法
@@ -30,7 +30,7 @@ npm run build
 ### 实施要点
 1. 新增任务方法要进行非空串、非空格和任务重复的判断
 
-## step2
+## step2：任务列表内容持久化存储和读取
 ### 目标
 1. 对任务列表内容进行浏览器持久化本地存储和读取
 2. 任务列表内容变化时及时保存数据
@@ -42,7 +42,7 @@ npm run build
 ### 实施要点
 1. 浏览器数据是以JSON格式进行存储和读取，其次当要读取的数据不存在时，将其赋值为空数组[]
 
-## step3
+## step3：任务状态和样式的切换
 ### 目标
 1. 为每个任务添加任务完成和未完成状态的切换事件
 2. 不同任务状态下有不同的样式显示
@@ -69,8 +69,7 @@ npm run build
 详细介绍可以查看官方文档 [#watch](http://cn.vuejs.org/v2/api/#watch)
 
 **tips: vue不能检测到对象属性的添加或删除，因此属性必须在data对象上存在，它才能响应式变化。**
-按照之前的例子，就是之前已存在的todo中没有completed属性，所以这个todo就不能响应式变化，也就是不能切换任务状态，而新增加的todo，在添加到todos前就存在了completed属性，它能正常的响应式变化
-具体内容参考:[响应式原理](http://cn.vuejs.org/v2/guide/reactivity.html)
+按照之前的例子，就是之前已存在的todo中没有completed属性，所以这个todo就不能响应式变化，也就是不能切换任务状态，而新增加的todo，在添加到todos前就存在了completed属性，它能正常的响应式变化，具体内容参考:[响应式原理](http://cn.vuejs.org/v2/guide/reactivity.html)
 
 
 
