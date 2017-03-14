@@ -6,6 +6,7 @@
       <li class="todo-li" v-for=" (todo,index) in todos " :class="{completed: todo.completed}" >
         <input type="checkbox" v-model="todo.completed" :id="'todoState'+index" class="state-toggle" />
         <label :for="'todoState'+index">{{todo.title}}</label>
+        <button @click="removeTodo(todo)" class="destory" ></button>
       </li>
     </ul>
   </div>
@@ -43,6 +44,12 @@ export default {
           if(existTodo) { return; }
           this.todos.push({title: todo,completed: false});
           this.newTodo = '';
+      },
+      removeTodo: function(todo){
+          // 获取在任务列表中的位置
+          var index = this.todos.indexOf(todo);
+          // 从数组中移除
+          this.todos.splice(index,1);
       }
   }
 }
@@ -50,6 +57,10 @@ export default {
 
 <style>
 h2 { font-size: 2em }
+button{
+  border: 0px;
+  background: none;
+}
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -60,7 +71,7 @@ h2 { font-size: 2em }
 }
 .todo-input{
   width: 100%;
-  height: 45px;
+  height: 50px;
   font-size: 1.5em;
   text-indent: 15px;
   padding: 0px
@@ -76,7 +87,7 @@ h2 { font-size: 2em }
 .todo-ul .todo-li{
   font-size: 1.6em;
   border-bottom: 1px solid #DDD;
-  padding: 10px 15px;
+  padding: 10px;
   position: relative;
 }
 /* 绝对定位并垂直水平居中 */
@@ -92,11 +103,32 @@ h2 { font-size: 2em }
   word-break: break-all;
   white-space: pre-line;
   margin-left: 45px;
+  margin-right: 40px;
   display: block;
 }
 .todo-ul .todo-li.completed label{
   text-decoration: line-through;
   color: #D9D9D9;
+}
+.todo-ul .todo-li .destory{
+  display: none;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  bottom: 0px;
+  width: 40px;
+  font-size: 1.3em;
+  color: #cc9a9a;
+  transistion: color 0.2s ease-out
+}
+.todo-ul .todo-li .destory:hover{
+  color: #af5b5e;
+}
+.todo-ul .todo-li .destory:after{
+  content: '×';
+}
+.todo-ul .todo-li:hover .destory{
+  display: block
 }
 
 </style>
