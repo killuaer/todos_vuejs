@@ -1,7 +1,10 @@
 <template>
   <div id="app">
     <h2>一个简单的todos</h2>
-    <input type="text" class="todo-input" v-model="newTodo" @keyup.enter="addTodo" placeholder="请输入想添加的任务" />
+    <div class="headView">
+      <input type="checkbox" v-model="allDone" class="todoState-all" v-show="todos.length" />
+      <input type="text" class="todo-input" v-model="newTodo" @keyup.enter="addTodo" placeholder="请输入想添加的任务" />
+    </div>
     <ul class="todo-ul">
       <li class="todo-li" v-for=" (todo,index) in todos " :class="{completed: todo.completed}" >
         <input type="checkbox" v-model="todo.completed" :id="'todoState'+index" class="state-toggle" />
@@ -31,6 +34,21 @@ export default {
           deep: true
       }
      
+  },
+  computed: {
+      allDone: {
+          get: function(){
+              var num = this.todos.filter(function(todo){
+                                return !todo.completed
+                        }).length;
+              return num === 0;
+          },
+          set: function(state){
+              this.todos.forEach(function(todo){
+                  todo.completed = state;
+              });
+          }
+      }
   },
   methods: {
       addTodo: function(){
@@ -69,12 +87,24 @@ button{
   margin: 30px 20%;
   width: auto;
 }
+div.headView{
+  position: relative;
+}
+div.headView .todoState-all{
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  width: 60px;
+  margin:auto 0px; 
+}
 .todo-input{
   width: 100%;
   height: 50px;
   font-size: 1.5em;
-  text-indent: 15px;
-  padding: 0px
+  text-indent: 2.2em;
+  padding: 0px;
+  border: 1px solid #DDD;
+  background: #FFF;
 }
 .todo-ul{
   list-style: none;
