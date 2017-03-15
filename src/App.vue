@@ -6,23 +6,51 @@
       <input type="text" class="todo-input" v-model="newTodo" @keyup.enter="addTodo" placeholder="请输入想添加的任务" />
     </div>
     <ul class="todo-ul">
-      <li class="todo-li" v-for=" (todo,index) in todos " :class="{completed: todo.completed}" >
+      <li class="todo-li" v-for=" (todo,index) in filteredTodos " :class="{completed: todo.completed}" :key="index" >
         <input type="checkbox" v-model="todo.completed" :id="'todoState'+index" class="state-toggle" />
         <label :for="'todoState'+index">{{todo.title}}</label>
         <button @click="removeTodo(todo)" class="destory" ></button>
       </li>
     </ul>
+    <div class="footer" v-show="todos.length">
+      <ul class="filters">
+        <li @click="visibility = 'all'"
+            :class="{selected: visibility=='all'}">全部</li>
+        <li @click="visibility = 'active'"
+            :class="{selected: visibility=='active'}">未完成</li>
+        <li @click="visibility = 'completed'" 
+            :class="{selected: visibility=='completed'}">已完成</li>
+      </ul>
+    </div>
   </div>
 </template>
 
 <script>
 import WebStorage from './common/webStorage.js'
+
+var filters = {
+  all: function (todos){
+      return todos;
+  },
+  active: function (todos){
+      return todos.filter(function(todo){
+                  return !todo.completed; 
+              });
+  },
+  completed: function (todos){
+      return todos.filter(function(todo){
+                  return todo.completed;                
+              });
+  }
+}
+
 export default {
   name: 'app',
   data: function(){
      return {
         newTodo: '',    //新增的任务项
-        todos: WebStorage("todos-vuejs").fetch()       //任务项列表
+        todos: WebStorage("todos-vuejs").fetch(),       //任务项列表
+        visibility: 'all'
      }
   },
   watch: {
@@ -48,6 +76,9 @@ export default {
                   todo.completed = state;
               });
           }
+      },
+      filteredTodos: function(){
+          return filters[this.visibility](this.todos);
       }
   },
   methods: {
@@ -104,6 +135,7 @@ div.headView .todoState-all{
   text-indent: 2.2em;
   padding: 0px;
   border: 1px solid #DDD;
+  border-bottom: 0px;
   background: #FFF;
 }
 .todo-ul{
@@ -112,6 +144,7 @@ div.headView .todoState-all{
   margin: 0px;
   margin-right: -2px;
   border: 1px solid #DDD;
+  border-bottom: 0px;
 }
 /* li相对定位 为里面的内容的绝对定位做参考 */
 .todo-ul .todo-li{
@@ -159,6 +192,33 @@ div.headView .todoState-all{
 }
 .todo-ul .todo-li:hover .destory{
   display: block
+}
+
+.footer{
+  position: relative;
+  border:1px solid #DDD;
+  text-align: center;
+  margin-right:-2px;
+  color: #777
+}
+.footer ul.filters {
+  position: relative; 
+  left: 0px;
+  right: 0px;
+  padding: 0px;
+  margin: auto;
+  line-height: 2em;
+  list-style: none;
+}
+.footer ul.filters li{
+  display: inline;
+  padding: 5px;
+  font-size: 0.7em;
+  cursor: pointer;
+}
+.footer ul.filters li.selected{
+  border: 1px solid rgba(175, 47, 47, 0.3);
+  border-radius: 8px;
 }
 
 </style>
