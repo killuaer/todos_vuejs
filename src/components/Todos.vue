@@ -13,17 +13,27 @@
       </li>
     </ul>
     <div class="footer" v-show="todos.length">
+      <span class="todo-count">{{remaining}}个任务未完成</span>
       <ul class="filters">
-        <router-link to="/todos/all" tag="li" :class="{selected: visibility=='all'}">
-          全部
-        </router-link>
-        <router-link to="/todos/active" tag="li" :class="{selected: visibility=='active'}">
-          未完成
-        </router-link>
-        <router-link to="/todos/completed" tag="li" :class="{selected: visibility=='completed'}">
-          已完成
-        </router-link>
+        <li>
+          <router-link to="/todos/all"  :class="{selected: visibility=='all'}">
+            全部
+          </router-link> 
+        </li>
+        <li>
+           <router-link to="/todos/active"   :class="{selected: visibility=='active'}">
+            未完成
+           </router-link>
+        </li>
+        <li>
+           <router-link to="/todos/completed"   :class="{selected: visibility=='completed'}">
+             已完成
+           </router-link>
+        </li>
+       
+        
       </ul>
+      <button class="clear-completed" v-show="todos.length > remaining " @click="removeCompleted">移除已完成任务</button>
     </div>
   </div>
 </template>
@@ -72,10 +82,7 @@ export default {
   computed: {
       allDone: {
           get: function(){
-              var num = this.todos.filter(function(todo){
-                                return !todo.completed
-                        }).length;
-              return num === 0;
+              return this.remaining === 0;
           },
           set: function(state){
               this.todos.forEach(function(todo){
@@ -85,6 +92,9 @@ export default {
       },
       filteredTodos: function(){
           return filters[this.visibility](this.todos);
+      },
+      remaining: function(){
+          return filters.active(this.todos).length
       }
   },
   methods: {
@@ -105,6 +115,9 @@ export default {
           var index = this.todos.indexOf(todo);
           // 从数组中移除
           this.todos.splice(index,1);
+      },
+      removeCompleted: function(){
+          this.todos = filters.active(this.todos)
       }
   }
 }
@@ -119,6 +132,7 @@ button{
 a {
   text-decoration: none;
   color: #777;
+  padding: 5px;
 }
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
@@ -211,6 +225,13 @@ div.headView .todoState-all{
   margin-right:-2px;
   color: #777
 }
+.footer .todo-count {
+  position:absolute;
+  left:20px;
+  font-size:0.7em;
+  line-height: 3em;
+}
+
 .footer ul.filters {
   position: relative; 
   left: 0px;
@@ -221,14 +242,26 @@ div.headView .todoState-all{
   list-style: none;
 }
 .footer ul.filters li{
-  display: inline;
-  padding: 5px;
+  display: inline-block;
+  width: 50px;
   font-size: 0.7em;
   cursor: pointer;
 }
-.footer ul.filters li.selected{
+.footer ul.filters li a.selected{
   border: 1px solid rgba(175, 47, 47, 0.3);
-  border-radius: 8px;
+  border-radius: 5px;
+}
+.footer ul.filters li:hover a{
+  border: 1px solid rgba(175, 47, 47, 0.1);
+  border-radius: 5px;
+}
+.footer .clear-completed {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  right: 5px;
+  color: #777;
+  font-size: 0.7em
 }
 
 </style>

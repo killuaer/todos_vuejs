@@ -4,7 +4,7 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 
 import App from './App.vue';
-import routes from './config/routes.js'
+import routes from './config/routes.js';
 
 Vue.use(VueRouter);
 const router = new VueRouter({
@@ -13,7 +13,6 @@ const router = new VueRouter({
 });
 
 /* eslint-disable no-new */
-// 新建vue.js实例,替换index.h
 new Vue({
   router,
   el: '#app',
