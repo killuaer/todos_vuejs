@@ -14,6 +14,8 @@
                :id="'todoState'+index" 
                class="state-toggle" />
         <label :for="'todoState'+index">{{todo.title}}</label>
+        <button @click="removeTodo(todo)"
+                class="destory" ></button>
       </li>
     </ul>
   </div>
@@ -58,6 +60,12 @@ export default {
 
           this.todos.push({ title: todo, completed: false });
           this.newTodo = '';
+      },
+      removeTodo: function(todo){
+          // 获取在任务列表中的位置
+          var index = this.todos.indexOf(todo);
+          // 从任务列表中移除
+          this.todos.splice(index,1);
       }
   }
 }
@@ -65,6 +73,10 @@ export default {
 
 <style>
 h2 { font-size: 2em }
+button{
+  border: 0px;
+  background: none;
+}
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
@@ -112,5 +124,25 @@ h2 { font-size: 2em }
 .todo-ul .todo-li.completed label{
   text-decoration: line-through;
   color: #D9D9D9;
+}
+.todo-ul .todo-li .destory{
+  display: none;
+  position: absolute;
+  right: 10px;
+  top: 0px;
+  bottom: 0px;
+  width: 40px;
+  font-size: 1.3em;
+  color: #cc9a9a;
+  transistion: color 0.2s ease-out
+}
+.todo-ul .todo-li:hover .destory{
+  display: block
+}
+.todo-ul .todo-li .destory:hover{
+  color: #af5b5e;
+}
+.todo-ul .todo-li .destory:after{
+  content: '×';
 }
 </style>
