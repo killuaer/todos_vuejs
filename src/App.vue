@@ -1,10 +1,16 @@
 <template>
   <div id="app">
     <h2>一个简单的todos</h2>
-    <input type="text" 
-           class="todo-input" 
-           v-model="newTodo" 
-           @keyup.enter="addTodo" placeholder="请输入想添加的任务" />
+    <div class="headView">
+      <input type="text" 
+             class="todo-input" 
+             v-model="newTodo" 
+             @keyup.enter="addTodo" placeholder="请输入想添加的任务" />
+      <input type="checkbox" 
+             v-model="allDone" 
+             class="todoState-all" 
+             v-show="todos.length" />
+    </div>
     <ul class="todo-ul">
       <li class="todo-li" 
           v-for=" (todo,index) in todos " 
@@ -42,6 +48,23 @@ export default {
           deep: true
       }
      
+  },
+  computed: {
+      allDone: {
+          // 若未完成数量为0，那么全选框选中(true)，否则不选中(false)
+          get: function(){
+              var num = this.todos.filter(function(todo){
+                                return !todo.completed
+                        }).length;
+              return num === 0;
+          },
+          // 根据全选框的值，对所有任务状态进行统一修改
+          set: function(state){
+              this.todos.forEach(function(todo){
+                  todo.completed = state;
+              });
+          }
+      }
   },
   methods: {
       addTodo: function(){
@@ -84,11 +107,24 @@ button{
   color: #2c3e50;
   margin: 30px 10%;
 }
-.todo-input{
+div.headView{
+  position: relative;
+  border: 1px solid #DDD;
+}
+div.headView .todoState-all{
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  left: 25px;
+  margin:auto 0px; 
+}
+div.headView .todo-input{
   width: 100%;
   font-size: 1.8em;
-  padding: 10px 40px;
+  padding: 10px 20px 10px 60px;
   box-sizing: border-box;
+  border: 0px;
+  background: #FFF;
 }
 .todo-ul{
   list-style: none;
@@ -109,15 +145,16 @@ button{
 .state-toggle{
   position: absolute;
   top: 0px;
-  bottom: 0px;
-  width: 40px;
+  bottom: 0px;  
+  left: 25px;
   margin:auto 0px; 
 }
 /* 处理文字溢出和 margin占位 */
 .todo-ul .todo-li label{
   word-break: break-all;
   white-space: pre-line;
-  margin-left: 40px;
+  margin-left: 60px;
+  margin-right: 50px;
   display: block;
   transition: color 0.4s;
 }
