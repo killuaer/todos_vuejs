@@ -104,7 +104,7 @@ export default {
      }
   },
   watch: {
-      // 深层次观察todos内容的变化，包括todo内容的变化
+      // 深层次观察todos内容的变化，包括任务对象(todo)上的变化，并及时存储数据
       todos: {
           handler: function (todos){
               WebStorage("todos-vuejs").save(todos)
@@ -141,12 +141,12 @@ export default {
   methods: {
       addTodo: function(){
           // 判断新增任务是否为空串
-          var todo = this.newTodo && this.newTodo.trim();
-          if(!todo) { return; }
+          var todo = this.newTodo.trim();
+          if(!todo) { this.newTodo = ''; return; }
           // 判断新增任务是否已经存在
-          var existTodo =  Array.from(this.todos).some(function(val){
-                                return val.title === todo;
-                            })
+          var existTodo =  this.todos.some(function(val){
+                               return val.title === todo;
+                           })
           if(existTodo) { return; }
           this.todos.push({ title: todo, completed: false });
           this.newTodo = '';
@@ -170,7 +170,8 @@ export default {
       doneEdit: function(todo){
           // editedTodo非空判断，失去焦点时可能为null
           if(!this.editedTodo) return;
-          var title = this.editedInput && this.editedInput.trim();
+          var title = this.editedInput.trim();
+          // 若任务内容为空格或空串，那么移除该任务项
           if(!title){ 
             this.removeTodo(todo); 
             this.editedTodo = null;
@@ -179,7 +180,7 @@ export default {
             return;
           } 
           // 获取任务内容相同的数组
-          var existTodo = Array.from(this.todos).filter(function(val){
+          var existTodo = this.todos.filter(function(val){
                                 return val.title === title;
                             });           
           // 若数量大于0，就说明有重复内容，撤销修改
@@ -187,6 +188,7 @@ export default {
              this.cancelEdit(todo);
              return;
           }
+          // 不是上述情况时，保存任务编辑内容
           todo.title = this.editedInput;
           this.editedTodo = null;
           this.editedInput = null;
@@ -320,14 +322,13 @@ body {
   left: 25px;
   margin:auto; 
   height: auto;
-  background:red;
 }
 /* 处理文字溢出和 margin占位 */
 .todo-li .view label{
   word-break: break-all;
   white-space: pre-line;
   margin-left: 60px;
-  padding: 15px 60px 15px 0px;
+  padding: 15px 50px 15px 0px;
   line-height: 1.2;
   display: block;
   transition: color 0.4s;
