@@ -13,16 +13,24 @@
              placeholder="请输入想添加的任务" />
     </div>
     <ul class="todo-ul">
-      <li class="todo-li" 
+      <li class="todo-li"
           v-for=" (todo,index) in filteredTodos " 
-          :class="{completed: todo.completed}" 
+          :class="{completed: todo.completed,editing: todo == editedTodo}"
           :key="index" >
-        <input type="checkbox" 
-               v-model="todo.completed" 
-               :id="'todoState'+index"
-               class="state-toggle" />
-        <label :for="'todoState'+index">{{todo.title}}</label>
-        <button @click="removeTodo(todo)" class="destory" ></button>
+        <div class="view">
+          <input type="checkbox"
+                 v-model="todo.completed"
+                 class="state-toggle" />
+          <label @dblclick="editTodo(todo)">{{todo.title}}</label>
+          <button @click="removeTodo(todo)" class="destory" ></button>
+        </div>
+        <input type="text" 
+               class="edit" 
+               v-todo-focus="todo == editedTodo" 
+               v-model="todo.title" 
+               @blur="doneEdit(todo)" 
+               @keyup.enter="doneEdit(todo)" 
+               @keyup.esc="cancelEdit(todo)" />
       </li>
     </ul>
     <div class="footer" v-show="todos.length">
@@ -83,7 +91,8 @@ export default {
         // 任务列表，在实例的数据观测(data observer)阶段，它就会获取浏览器中存储的数据
         todos: WebStorage("todos-vuejs").fetch(),
         // 保存过滤选项选中的值
-        visibility: this.$route.params.visibility
+        visibility: this.$route.params.visibility,
+        editedTodo: null
      }
   },
   watch: {
@@ -136,7 +145,7 @@ export default {
           var existTodo =  this.todos.some(function(val){
                                return val.title === todo;
                            })
-                           
+
           if(existTodo) { return; }
 
           this.todos.push({ title: todo, completed: false });
@@ -150,6 +159,45 @@ export default {
       },
       removeCompleted: function(){
           this.todos = filters.active(this.todos)
+      },
+      editTodo: function(todo){
+          // 若任务已完成 那么不能编辑
+          if(todo.completed) return;
+          // 缓存原始任务内容
+          this.beforeEditCache = todo.title;
+          // 判定显示那个任务下的编辑框
+          this.editedTodo = todo;
+      },
+      doneEdit: function(todo){
+          // this.editedTodo = null 对于视图相当于隐藏任务编辑区
+          var title = todo.title.trim();
+          if(!title){ 
+            this.removeTodo(todo); 
+            this.editedTodo = null;
+            return;
+          } 
+          // 获取任务内容相同的数组
+          var existTodo = this.todos.filter(function(val){
+                                return val.title === title;
+                            });
+          //数量若有一个以上，就说明有重复内容，撤销修改
+          if(existTodo.length>1){ 
+            this.cancelEdit(todo);
+          }else{
+            this.editedTodo = null;
+          }
+      },
+      cancelEdit: function(todo){
+          this.editedTodo = null;
+          todo.title = this.beforeEditCache
+      }
+  },
+  directives:{
+      'todo-focus': function(el,binding){
+          // 被绑定元素的value为true,那么该元素获得焦点
+          if(binding.value){
+              el.focus();
+          }
       }
   }
 }
@@ -172,6 +220,13 @@ a {
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
   margin: 30px 10%;
+  width: auto;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 div.headView{
   position: relative;
@@ -252,6 +307,24 @@ div.headView .todo-input{
 .todo-ul .todo-li:hover .destory{
   display: block
 }
+.todo-ul .todo-li.editing{
+  padding: 0px;
+}
+.todo-ul .todo-li .edit{
+  display: none;
+}
+.todo-ul .editing .view{
+  display: none;
+}
+.todo-ul .editing .edit{
+  display: block;
+  height: 45px;
+  margin-left: 50px;
+  padding: 0px 10px;
+  font-size: 1.2em;
+  background: #C7EDCC;
+}
+
 
 .footer{
   position: relative;
