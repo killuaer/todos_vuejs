@@ -110,16 +110,51 @@ npm run build
 2. 添加全部、已完成、未完成任务列表的点击事件，显示过滤后的任务列表。
 
 ### 实施内容
-1. 过滤选项结构 ----  div、ul、li
-2. 当任务数量等于0，则用v-show隐藏过滤选项
+1. 过滤选项结构 ---- div(底部容器)、ul(过滤选项)
+2. 当任务数量等于0，则用v-show隐藏底部容器
 3. 添加实例属性visibility，用于保存过滤选项选中的值。
 4. 通过@click在每个过滤选项上绑定一个赋值给visibility的JS表达式
 5. 创建新的对象filters，它封装了三个方法all、active、completed，分别返回全部任务列表、未完成任务列表和已完成任务列表。最后选择什么列表依赖于visibility的值
 6. 添加计算属性filteredTodos，把显示任务列表的循环替换成显示过滤任务列表的循环，其值为`filters[this.visibility](this.todos)`
 
 ### 实施要点
-1. visibility(点击)-->filteredTodos(计算)-->filters(调用)-->filteredTodos(返回值)
+1. visibility(变化)-->filteredTodos(计算)-->filters(调用)-->filteredTodos(返回值)
 2. vue渲染元素默认采用“就地复用”的方式，来达到性能提升的效果，但它有时会因此带来莫名其妙的问题，为了避免复用元素，可以在v-for元素上绑定:key=XX来标识身份，避免就地复用。
 比如说，点击未完成任务过滤选项，显示出三个任务内容，点击第二个任务完成，会出现复选框选中的值保留到第三个任务上，可实际上第三任务依旧是未完成的情况
+
+
+## step-6-2：通过路由过滤显示任务列表
+### 目标
+1. 从App.vue中分离出todos组件，再通过路由调用组件。
+2. 点击不同的过滤选项后，通过路由返回不同的过滤任务列表
+
+### 实施内容
+1. 在main.js中引入vue-router、自定义路由配置文件，然后全局应用路由功能Vue.use(VueRouter)和路由配置文件，再把路由实例添加到vue实例上，同时vue上的template中要有路由出口router-view,最后再把vue实例挂载到html元素上
+2. 路由配置中路由的访问都返回todos组件，其传递的参数可以通过this.$route.params访问。由于组件复用的原因，所以需要watch $route的变化，才能改变visibility的值
+3. router-link在HTML5 hisitory 模式下，它会拦截点击事件不让浏览器重新加载页面，同时可配置tag属性生成别的标签
+4. 获取到路由参数值，再过滤显示任务列表，具体处理参照step-6-1
+
+### 实施要点
+1. 导入路由 --> 配置和应用路由 --> 路由添加到vue实例中 --> vue实例挂载到页面中
+2.过滤选项(点击) --> 路由配置(匹配项) --> 组件(返回) -->  router-view视图(显示)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
