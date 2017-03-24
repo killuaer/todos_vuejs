@@ -26,6 +26,7 @@
       </li>
     </ul>
     <div class="footer" v-show="todos.length">
+      <span class="todo-count">{{remaining}}个任务未完成</span>
       <ul class="filters">
         <li>
           <router-link to="/todos/all" 
@@ -46,6 +47,9 @@
           </router-link>
         </li>
       </ul>
+      <button class="clear-completed" 
+              v-show="todos.length > remaining" 
+              @click="removeCompleted">移除已完成任务</button>
     </div>
   </div>
 </template>
@@ -100,10 +104,7 @@ export default {
       allDone: {
           // 若未完成数量为0，那么全选框选中(true)，否则不选中(false)
           get: function(){
-              var num = this.todos.filter(function(todo){
-                                return !todo.completed
-                        }).length;
-              return num === 0;
+              return this.remaining === 0;
           },
           // 根据全选框的值，对所有任务状态进行统一修改
           set: function(state){
@@ -117,6 +118,10 @@ export default {
           this.visibility = ['all','active','completed'].indexOf(this.visibility)>0?this.visibility : 'all';
           // 获得过滤值，再获得相应的过滤方法，最后对传入的参数进行过滤
           return filters[this.visibility](this.todos);
+      },
+      remaining: function(){
+          // 返回未完成任务的数量 
+          return filters.active(this.todos).length
       }
   },
   methods: {
@@ -142,6 +147,9 @@ export default {
           var index = this.todos.indexOf(todo);
           // 从任务列表中移除
           this.todos.splice(index,1);
+      },
+      removeCompleted: function(){
+          this.todos = filters.active(this.todos)
       }
   }
 }
@@ -252,6 +260,12 @@ div.headView .todo-input{
   padding: 10px 23px 32px;
   border: 1px solid #DDD;
 }
+.footer .todo-count {
+  position: absolute;
+  left: 25px;
+  font-size: 0.8em;
+}
+
 .footer ul.filters {
   position: absolute; 
   left: 0px;
@@ -275,6 +289,14 @@ ul.filters li:hover a.selected
 ul.filters li:hover a{
   border: 1px solid rgba(175, 47, 47, 0.1);
   border-radius: 5px;
+}
+.footer .clear-completed {
+  position: absolute;
+  top: 0px;
+  bottom: 0px;
+  right: 5px;
+  color: #777;
+  font-size: 0.7em
 }
 
 </style>

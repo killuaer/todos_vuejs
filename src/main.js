@@ -4,7 +4,7 @@ import Vue from 'vue';
 import VueRouter from 'vue-router';
 
 import App from './App.vue';
-import routes from './config/routes.js'
+import routes from './config/routes.js';
 
 // 全局应用路由功能
 Vue.use(VueRouter);
@@ -13,6 +13,7 @@ const router = new VueRouter({
 	routes,
 	mode: 'history'
 });
+
 
 // 应用路由配置到vue实例上
 new Vue({
