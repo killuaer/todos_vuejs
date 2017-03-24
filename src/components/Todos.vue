@@ -1,7 +1,8 @@
 <template>
-  <div id="app">
-    <h2>一个简单的todos</h2>
-    <div class="headView">
+  <section id="todosApp">
+    <!--todos头部-->
+    <header class="header">
+      <h2>todos</h2>
       <input type="checkbox" 
              v-model="allDone" 
              class="todoState-all" 
@@ -9,36 +10,43 @@
       <input type="text" 
              class="todo-input" 
              v-model="newTodo" 
-             @keyup.enter="addTodo" 
-             placeholder="请输入想添加的任务" />
-    </div>
-    <ul class="todo-ul">
-      <li class="todo-li"
-          v-for=" (todo,index) in filteredTodos " 
-          :class="{completed: todo.completed,editing: todo == editedTodo}"
-          :key="index" >
-        <div class="view">
-          <input type="checkbox"
-                 v-model="todo.completed"
-                 class="state-toggle" />
-          <label @dblclick="editTodo(todo)">{{todo.title}}</label>
-          <button @click="removeTodo(todo)" class="destory" ></button>
-        </div>
-        <input type="text" 
-               class="edit" 
-               v-todo-focus="todo == editedTodo" 
-               v-model="todo.title" 
-               @blur="doneEdit(todo)" 
-               @keyup.enter="doneEdit(todo)" 
-               @keyup.esc="cancelEdit(todo)" />
-      </li>
-    </ul>
-    <div class="footer" v-show="todos.length">
+             @keyup.enter="addTodo" placeholder="请输入想添加的任务" />
+    </header>
+
+    <!--todos主体-->
+    <section class="main">
+      <ul class="todo-ul">
+        <li  class="todo-li" 
+             v-for=" (todo,index) in filteredTodos " 
+             :class="{completed: todo.completed,editing: todo == editedTodo}" 
+             :key="todo.title+visibility">
+          <!--todo视图-->
+          <section class="view">
+            <input type="checkbox" 
+                   v-model="todo.completed" 
+                   class="state-toggle" />
+            <label @dblclick="editTodo(todo)">{{todo.title}}</label>
+            <button @click="removeTodo(todo)" class="destory" ></button>
+          </section>
+          <!--todo编辑框-->
+          <input type="text" 
+                 class="edit" 
+                 v-todo-focus="todo == editedTodo" 
+                 v-model="editedInput" 
+                 @blur="doneEdit(todo)" 
+                 @keyup.enter="doneEdit(todo)" 
+                 @keyup.esc="cancelEdit(todo)" />
+        </li>
+      </ul>
+    </section>
+
+    <!--todos底部-->
+    <footer class="footer" v-show="todos.length">
       <span class="todo-count">{{remaining}}个任务未完成</span>
       <ul class="filters">
         <li>
-          <router-link to="/todos/all" 
-              :class="{selected: visibility=='all'}">
+          <router-link to="/todos/all"  
+            :class="{selected: visibility=='all'}">
                全部
           </router-link> 
         </li>
@@ -56,29 +64,30 @@
         </li>
       </ul>
       <button class="clear-completed" 
-              v-show="todos.length > remaining" 
+              v-show="todos.length > remaining "
               @click="removeCompleted">移除已完成任务</button>
-    </div>
-  </div>
+    </footer>
+  </section>
 </template>
 
 <script>
 import WebStorage from '../common/webStorage.js'
 
-// 根据不同的过滤值返回不同的过滤方法
+
+// 根据不同的过滤项返回不同的过滤方法
 var filters = {
   all: function (todos){
       return todos;
   },
   active: function (todos){
       return todos.filter(function(todo){
-                  return !todo.completed; 
-              });
+          return !todo.completed; 
+      });
   },
   completed: function (todos){
       return todos.filter(function(todo){
-                  return todo.completed;                
-              });
+          return todo.completed;                
+      });
   }
 }
 
@@ -92,7 +101,9 @@ export default {
         todos: WebStorage("todos-vuejs").fetch(),
         // 保存过滤选项选中的值
         visibility: this.$route.params.visibility,
-        editedTodo: null
+        editedTodo: null,
+        // 缓存任务编辑框的值，不直接修改todo.title，避免触发ul更新，导致编辑框失去焦点
+        editedInput: ''
      }
   },
   watch: {
@@ -103,7 +114,7 @@ export default {
           },
           deep: true
       },
-      // 检测通过router-link提交的路由变化
+      // 检测通过router-link提交的路由变化,并获取过滤选项值
       $route (to, from) {
           this.visibility = to.params.visibility;
       }
@@ -147,7 +158,6 @@ export default {
                            })
 
           if(existTodo) { return; }
-
           this.todos.push({ title: todo, completed: false });
           this.newTodo = '';
       },
@@ -164,39 +174,55 @@ export default {
           // 若任务已完成 那么不能编辑
           if(todo.completed) return;
           // 缓存原始任务内容
+          this.editedInput = todo.title;
           this.beforeEditCache = todo.title;
-          // 判定显示那个任务下的编辑框
+          // 判定显示哪个任务下的编辑框
           this.editedTodo = todo;
       },
       doneEdit: function(todo){
-          // this.editedTodo = null 对于视图相当于隐藏任务编辑区
-          var title = todo.title.trim();
+          // editedTodo非空判断，失去焦点时可能为null
+          if(!this.editedTodo) return;
+          var title = this.editedInput.trim();
+          // 若任务内容为空格或空串，那么移除该任务项
           if(!title){ 
             this.removeTodo(todo); 
             this.editedTodo = null;
+            this.editedInput = null;
+            this.beforeEditCache = null;
             return;
           } 
           // 获取任务内容相同的数组
           var existTodo = this.todos.filter(function(val){
                                 return val.title === title;
-                            });
-          //数量若有一个以上，就说明有重复内容，撤销修改
-          if(existTodo.length>1){ 
-            this.cancelEdit(todo);
-          }else{
-            this.editedTodo = null;
+                            });           
+          // 若数量大于0，就说明有重复内容，撤销修改
+          if(existTodo.length>0){ 
+             this.cancelEdit(todo);
+             return;
           }
+          // 不是上述情况时，保存任务编辑内容
+          todo.title = this.editedInput;
+          this.editedTodo = null;
+          this.editedInput = null;
+          this.beforeEditCache = null;
       },
       cancelEdit: function(todo){
-          this.editedTodo = null;
+          // 它只是隐藏了编辑框，并没有失去焦点，故它还会调用一次 doneEdit 方法
           todo.title = this.beforeEditCache
+          this.editedInput = null;
+          this.editedTodo = null;
+          this.beforeEditCache = null;
       }
   },
   directives:{
       'todo-focus': function(el,binding){
           // 被绑定元素的value为true,那么该元素获得焦点
           if(binding.value){
-              el.focus();
+            el.focus();
+            // 移动光标至文本末尾
+            if(el.selectionStart===0){
+               el.selectionStart = el.value.length;
+            }
           }
       }
   }
@@ -204,7 +230,7 @@ export default {
 </script>
 
 <style>
-h2 { font-size: 2em }
+/* 全局样式 */
 button{
   border: 0px;
   background: none;
@@ -214,77 +240,115 @@ a {
   color: #777;
   padding: 5px;
 }
-#app {
-  font-family: 'Avenir', Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  color: #2c3e50;
-  margin: 30px 10%;
-  width: auto;
-  -webkit-touch-callout: none;
-  -webkit-user-select: none;
-  -khtml-user-select: none;
-  -moz-user-select: none;
-  -ms-user-select: none;
-  user-select: none;
+body {
+  font: 14px 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  line-height: 1.4em;
+  background: #f5f5f5;
+  color: #4d4d4d;
+  min-width: 230px;
+  max-width: 550px;
+  margin: 0 auto;
+  font-weight: 300;
 }
-div.headView{
+/* 新增任务框中占位文字的样式 */
+#todosApp input::-webkit-input-placeholder {
+  font-style: italic;
+  font-weight: 300;
+  color: #c6c6c6;
+}
+#todosApp input::-moz-placeholder {
+  font-style: italic;
+  font-weight: 300;
+  color: #c6c6c6;
+}
+#todosApp input::input-placeholder {
+  font-style: italic;
+  font-weight: 300;
+  color: #c6c6c6;
+}
+
+#todosApp {
+  background: #fff;
+  margin: 130px 0 40px 0;
+  position: relative;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2),
+              0 25px 50px 0 rgba(0, 0, 0, 0.1);
+}
+/* todos头部 */
+#todosApp .header{
   position: relative;
   border: 1px solid #DDD;
 }
-div.headView .todoState-all{
+#todosApp .header h2 { 
+  position: absolute;
+  top: -155px;
+  width: 100%;
+  font-size: 100px;
+  font-weight: 100;
+  text-align: center;
+  color: rgba(175, 47, 47, 0.15);
+}
+#todosApp .header .todoState-all{
   position: absolute;
   top: 0px;
   bottom: 0px;
   left: 25px;
-  margin:auto 0px; 
+  margin:auto; 
 }
-div.headView .todo-input{
+#todosApp .header .todo-input{
+  padding: 16px 16px 16px 60px;
+  border: none;
+  background: rgba(0, 0, 0, 0.003);
+  box-shadow: inset 0 -2px 1px rgba(0,0,0,0.03);
+  font-size: 24px;
+  font-family: inherit;
+  line-height: 1.4em;
   width: 100%;
-  font-size: 1.8em;
-  padding: 10px 20px 10px 60px;
   box-sizing: border-box;
-  border: 0px;
-  background: #FFF;
 }
 
-.todo-ul{
+/* todos主体 */
+#todosApp .main{
+  position: relative;
+  border: 1px solid #DDD;
+  border-top: 0;
+  border-bottom: 0;
+}
+#todosApp .main .todo-ul{
   list-style: none;
   padding: 0px;
   margin: 0px;
-  border: 1px solid #DDD;
-  border-top: 0px;
-  border-bottom: 0px;
 }
 /* li相对定位 为里面的内容的绝对定位做参考 */
-.todo-ul .todo-li{
+#todosApp .main .todo-ul .todo-li{
   font-size: 1.6em;
   border-bottom: 1px solid #DDD;
-  padding: 10px 0px;
   position: relative;
 }
 /* 绝对定位并垂直水平居中 */
-.state-toggle{
+.todo-li .view .state-toggle{
   position: absolute;
   top: 0px;
-  bottom: 0px;  
+  bottom: 0px;
   left: 25px;
-  margin:auto 0px; 
+  margin:auto; 
+  height: auto;
 }
 /* 处理文字溢出和 margin占位 */
-.todo-ul .todo-li label{
+.todo-li .view label{
   word-break: break-all;
   white-space: pre-line;
   margin-left: 60px;
-  margin-right: 50px;
+  padding: 15px 50px 15px 0px;
+  line-height: 1.2;
   display: block;
   transition: color 0.4s;
 }
-.todo-ul .todo-li.completed label{
+.todo-li.completed .view label{
   text-decoration: line-through;
   color: #D9D9D9;
 }
-.todo-ul .todo-li .destory{
+.todo-li .view .destory{
   display: none;
   position: absolute;
   right: 10px;
@@ -295,37 +359,36 @@ div.headView .todo-input{
   color: #cc9a9a;
   transistion: color 0.2s ease-out
 }
-.todo-ul .todo-li:hover .destory{
-  display: block
-}
-.todo-ul .todo-li .destory:hover{
+.todo-li .view .destory:hover{
   color: #af5b5e;
 }
-.todo-ul .todo-li .destory:after{
+.todo-li .view .destory:after{
   content: '×';
 }
-.todo-ul .todo-li:hover .destory{
+.todo-li:hover .view .destory{
   display: block
 }
-.todo-ul .todo-li.editing{
-  padding: 0px;
-}
-.todo-ul .todo-li .edit{
+.todo-li .edit{
   display: none;
 }
-.todo-ul .editing .view{
+.todo-li.editing .view{
   display: none;
 }
-.todo-ul .editing .edit{
+.todo-li.editing .edit{
+  margin: 0 0 0 43px;
   display: block;
-  height: 45px;
-  margin-left: 50px;
-  padding: 0px 10px;
+  width: 506px;
+  margin: 0 0 0 43px;
+  box-sizing: border-box;
+  padding: 7px 17px 10px;
   font-size: 1.2em;
+  line-height: 1.4em;
   background: #C7EDCC;
+  border: 1px solid #999;
+  box-shadow: inset 0 -1px 5px 0 rgba(0, 0, 0, 0.2);
 }
 
-
+/* todos底部 */
 .footer{
   position: relative;
   text-align: center;
@@ -338,7 +401,6 @@ div.headView .todo-input{
   left: 25px;
   font-size: 0.8em;
 }
-
 .footer ul.filters {
   position: absolute; 
   left: 0px;
@@ -350,7 +412,7 @@ div.headView .todo-input{
 .footer ul.filters li{
   display: inline-block;
   width: 50px;
-  font-size: 0.7em;
+  font-size: 0.8em;
   cursor: pointer;
 }
 ul.filters li a.selected,
@@ -369,7 +431,6 @@ ul.filters li:hover a{
   bottom: 0px;
   right: 5px;
   color: #777;
-  font-size: 0.7em
+  font-size: 0.8em
 }
-
 </style>
