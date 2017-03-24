@@ -13,8 +13,8 @@
     </div>
     <ul class="todo-ul">
       <li class="todo-li" 
-          v-for=" (todo,index) in todos " 
-          :class="{completed: todo.completed}" >
+          v-for=" (todo,index) in filteredTodos " 
+          :class="{completed: todo.completed}" :key="index" >
         <input type="checkbox" 
                v-model="todo.completed" 
                :id="'todoState'+index" 
@@ -24,11 +24,39 @@
                 class="destory" ></button>
       </li>
     </ul>
+    <div class="footer" v-show="todos.length">
+      <ul class="filters">
+        <li @click="visibility = 'all'"
+            :class="{selected: visibility=='all'}">全部</li>
+        <li @click="visibility = 'active'"
+            :class="{selected: visibility=='active'}">未完成</li>
+        <li @click="visibility = 'completed'" 
+            :class="{selected: visibility=='completed'}">已完成</li>
+      </ul>
+    </div>
   </div>
 </template>
 
 <script>
 import WebStorage from './common/webStorage.js'
+
+// 根据不同的过滤值返回不同的过滤方法
+var filters = {
+  all: function (todos){
+      return todos;
+  },
+  active: function (todos){
+      return todos.filter(function(todo){
+                  return !todo.completed; 
+              });
+  },
+  completed: function (todos){
+      return todos.filter(function(todo){
+                  return todo.completed;                
+              });
+  }
+}
+
 export default {
   name: 'app',
   data: function(){
@@ -36,7 +64,9 @@ export default {
         // 新增的任务
         newTodo: '',    
         // 任务列表，在实例的数据观测(data observer)阶段，它就会获取浏览器中存储的数据
-        todos: WebStorage("todos-vuejs").fetch()
+        todos: WebStorage("todos-vuejs").fetch(),
+        // 保存过滤选项选中的值
+        visibility: 'all'
      }
   },
   watch: {
@@ -64,6 +94,10 @@ export default {
                   todo.completed = state;
               });
           }
+      },
+      filteredTodos: function(){
+          // 获得过滤值，再获得相应的过滤方法，最后对传入的参数进行过滤
+          return filters[this.visibility](this.todos);
       }
   },
   methods: {
@@ -126,6 +160,7 @@ div.headView .todo-input{
   border: 0px;
   background: #FFF;
 }
+
 .todo-ul{
   list-style: none;
   padding: 0px;
@@ -181,5 +216,34 @@ div.headView .todo-input{
 }
 .todo-ul .todo-li .destory:after{
   content: '×';
+}
+.todo-ul .todo-li:hover .destory{
+  display: block
+}
+
+.footer{
+  position: relative;
+  border:1px solid #DDD;
+  text-align: center;
+  color: #777
+}
+.footer ul.filters {
+  position: relative; 
+  left: 0px;
+  right: 0px;
+  padding: 0px;
+  margin: auto;
+  line-height: 2em;
+  list-style: none;
+}
+.footer ul.filters li{
+  display: inline;
+  padding: 5px;
+  font-size: 0.7em;
+  cursor: pointer;
+}
+.footer ul.filters li.selected{
+  border: 1px solid rgba(175, 47, 47, 0.3);
+  border-radius: 8px;
 }
 </style>
