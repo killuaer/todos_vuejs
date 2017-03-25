@@ -15,11 +15,20 @@
 
     <!--todos主体-->
     <section class="main">
-      <ul class="todo-ul">
+      <!--过渡组件-->
+      <transition-group
+        class="todo-ul"
+        tag="ul"
+        v-bind:css="false"
+        v-on:before-enter="beforeEnter"
+        v-on:enter="enter"
+        v-on:leave="leave"
+      >
         <li  class="todo-li" 
              v-for=" (todo,index) in filteredTodos " 
              :class="{completed: todo.completed,editing: todo == editedTodo}" 
-             :key="todo.title+visibility">
+             :key="todo.title+visibility"
+             :data-index="index">
           <!--todo视图-->
           <section class="view">
             <input type="checkbox" 
@@ -37,7 +46,7 @@
                  @keyup.enter="doneEdit(todo)" 
                  @keyup.esc="cancelEdit(todo)" />
         </li>
-      </ul>
+      </transition-group>
     </section>
 
     <!--todos底部-->
@@ -73,6 +82,7 @@
 
 <script>
 import WebStorage from '../common/webStorage.js'
+import Velocity from 'velocity-animate'
 
 // 根据不同的过滤项返回不同的过滤方法
 var filters = {
@@ -200,6 +210,35 @@ export default {
           this.editedInput = null;
           this.editedTodo = null;
           this.beforeEditCache = null;
+      },
+      beforeEnter: function (el) {
+        el.style.opacity = 0
+        el.style.height = 0
+        el.style.border = 0
+      },
+      enter: function (el, done) {
+       // 获取li上data-index的值，延迟执行过渡效果
+       var delay = el.dataset.index * 80
+       // 获取任务内容自适应后的高度
+       var elHeight =el.getElementsByTagName("label")[0].clientHeight
+       el.style.borderBottom = '1px solid #DDD'
+        setTimeout(function () {
+          Velocity(
+            el,
+            { opacity: 1, height: elHeight},
+            { complete: done }
+          )
+        }, delay)
+      },
+      leave: function (el, done) {
+        var delay = el.dataset.index * 80
+        setTimeout(function () {
+          Velocity(
+            el,
+            { opacity: 0, height: 0},
+            { complete: done }
+          )
+        }, delay)
       }
   },
   directives:{
@@ -313,6 +352,7 @@ body {
   font-size: 1.6em;
   border-bottom: 1px solid #DDD;
   position: relative;
+  overflow: hidden;
 }
 /* 绝对定位并垂直水平居中 */
 .todo-li .view .state-toggle{

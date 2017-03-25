@@ -189,4 +189,41 @@ npm run build
 3. 任务编辑框获得焦点后，默认移动光标至文本末尾，支持主流浏览器。
 
 
+## step-10：任务列表渐进过渡
+### 目标
+1. 当进行新增任务、删除任务或改变过滤选项时，为任务列表添加过渡效果
+
+### 实施内容
+1. 渲染整个列表，需要用到<transition-group>组件，它要求内部元素总是需要提供唯一的key属性值，其次它可以通过tag特性更换为其他元素，故用<transition-group>替代ul，并使其tag值为ul
+2. 在<transition-group>上添加JavaScript过渡钩子，
+钩子有：before-enter、enter、after-enter、enter-cancelled、before-leave、leave、after-leave和leave-cancelled，需要使用到的钩子为，berfore-enter、enter和leave
+3. 引入第三方javaScript动画库---Velocity.js，优化过渡效果。
+
+### 实施要点
+1. 通过`npm install velocity-animate --save`安装Velocity.js，然后再import到组件中
+2. 过渡效果处理，内容进入前，高度和透明度为0，内容进入中，高度慢慢变为label的高度和透明度变为1，当内容离开中，高度和透明度慢慢变为0
+3. DOM数据更新时，:key值一定要不一样，不然会造成复用，从而达不到想要的效果。比如说，:key=index时，共有三项，移除第一项，会发现下面有过渡效果，而不是移除项有过渡效果。故:key=todo.title+visibility，这样切换过滤项时，也会有过渡效果。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
