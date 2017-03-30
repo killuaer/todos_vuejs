@@ -223,31 +223,7 @@ todos和todo是要传递的参数，而doneEdit和removeTodo是监听事件，�
 2. 在Todo.vue中，由于每个组件都有自己的editedTodo，而不是共享同一个，所以不需要判断`editedTodo==todo`来确定哪个需要编辑，只需要判断true/false即可
 3. 基于官方的建议，不应该在子组件内修改父组件的值，所以才会添加一个doneEdit的监听事件，不然直接用`todo.task = this.editedInput`即可修改任务内容
 
-<<<<<<< Updated upstream
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-=======
 ### 修复内容
 1. 把底部过滤选项整合到options对象中，再通过v-for遍历循环出来
 2. 把todo对象里的title属性改名为task,名称更直观一点
 3. 实现过渡效果必要的:key的值修改为`todo.task`，因为它能减少性能的损耗，尤其是任务内容多的时候，之前的key值会在切换路由后重新加载整个任务列表，哪怕没有内容变化(效果好看？)，性能没有达到优化。
->>>>>>> Stashed changes
