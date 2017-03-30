@@ -205,6 +205,25 @@ npm run build
 3. DOM数据更新时，:key值一定要不一样，不然会造成复用，从而达不到想要的效果。比如说，:key=index时，共有三项，移除第一项，会发现下面有过渡效果，而不是移除项有过渡效果。故:key=todo.title+visibility，这样切换过滤项时，也会有过渡效果。
 
 
+## step-11：抽离出Todo.vue组件
+### 目标
+1. 从Todos.vue中抽离出Todo.vue,使功能区分更明确
+
+### 实施内容
+1. 父组件(Todos.vue)传递给子组件(Todo.vue)的参数，除了需要绑定到子组件上，还需要在子组件的props属性上声明，而子组件反馈数据给父组件是通过事件，它需要在子组件上绑定监听事件，通过在子组件内this.$emit('even','args')触发父组件上的监听事件，切记，定义在子组件上的监听事件不要加传参的括号,不然它会误认为是父组件上的参数获取，而不是子组件的参数获取
+```
+<todo v-for=" (todo,index) in filteredTodos " 
+          :todo="todo" 
+          :todos="todos"
+          :key="todo.task"
+          @doneEdit="doneEdit"
+          @removeTodo="removeTodo"></todo>
+```
+todos和todo是要传递的参数，而doneEdit和removeTodo是监听事件，等待子组件的触发。
+2. 在Todo.vue中，由于每个组件都有自己的editedTodo，而不是共享同一个，所以不需要判断`editedTodo==todo`来确定哪个需要编辑，只需要判断true/false即可
+3. 基于官方的建议，不应该在子组件内修改父组件的值，所以才会添加一个doneEdit的监听事件，不然直接用`todo.task = this.editedInput`即可修改任务内容
+
+<<<<<<< Updated upstream
 
 
 
@@ -226,4 +245,9 @@ npm run build
 
 
 
-
+=======
+### 修复内容
+1. 把底部过滤选项整合到options对象中，再通过v-for遍历循环出来
+2. 把todo对象里的title属性改名为task,名称更直观一点
+3. 实现过渡效果必要的:key的值修改为`todo.task`，因为它能减少性能的损耗，尤其是任务内容多的时候，之前的key值会在切换路由后重新加载整个任务列表，哪怕没有内容变化(效果好看？)，性能没有达到优化。
+>>>>>>> Stashed changes

@@ -24,28 +24,12 @@
         v-on:enter="enter"
         v-on:leave="leave"
       >
-        <li  class="todo-li" 
-             v-for=" (todo,index) in filteredTodos " 
-             :class="{completed: todo.completed,editing: todo == editedTodo}" 
-             :key="todo.title+visibility"
-             :data-index="index">
-          <!--todo视图-->
-          <section class="view">
-            <input type="checkbox" 
-                   v-model="todo.completed" 
-                   class="state-toggle" />
-            <label @dblclick="editTodo(todo)">{{todo.title}}</label>
-            <button @click="removeTodo(todo)" class="destory" ></button>
-          </section>
-          <!--todo编辑框-->
-          <input type="text" 
-                 class="edit" 
-                 v-todo-focus="todo == editedTodo" 
-                 v-model="editedInput" 
-                 @blur="doneEdit(todo)" 
-                 @keyup.enter="doneEdit(todo)" 
-                 @keyup.esc="cancelEdit(todo)" />
-        </li>
+        <todo v-for=" (todo,index) in filteredTodos " 
+              :todo="todo" 
+              :todos="todos"
+              :key="todo.task"
+              @doneEdit="doneEdit"
+              @removeTodo="removeTodo"></todo>
       </transition-group>
     </section>
 
@@ -53,23 +37,11 @@
     <footer class="footer" v-show="todos.length">
       <span class="todo-count">{{remaining}}个任务未完成</span>
       <ul class="filters">
-        <li>
-          <router-link to="/todos/all"  
-            :class="{selected: visibility=='all'}">
-               全部
+        <li v-for=" (value,key) in options " >
+          <router-link :to="'/todos/'+key" 
+            :class="{selected: visibility == key}">
+               {{value}}
           </router-link> 
-        </li>
-        <li>
-          <router-link to="/todos/active" 
-            :class="{selected: visibility=='active'}">
-               未完成
-          </router-link>
-        </li>
-        <li>
-          <router-link to="/todos/completed"  
-            :class="{selected: visibility=='completed'}">
-               已完成
-          </router-link>
         </li>
       </ul>
       <button class="clear-completed" 
@@ -83,6 +55,7 @@
 <script>
 import WebStorage from '../common/webStorage.js'
 import Velocity from 'velocity-animate'
+import todo from './Todo.vue'
 
 // 根据不同的过滤项返回不同的过滤方法
 var filters = {
@@ -101,6 +74,9 @@ var filters = {
   }
 }
 
+// 过滤选项
+var options = {"all":"全部", "active":"未完成", "completed":"已完成"}
+
 export default {
   name: 'todosApp',
   data: function(){
@@ -108,10 +84,11 @@ export default {
         newTodo: '',   
         todos: WebStorage("todos-vuejs").fetch(),   
         visibility: this.$route.params.visibility,
-        editedTodo: null,
-        // 缓存任务编辑框的值，不直接修改todo.title，避免触发ul更新，导致编辑框失去焦点
-        editedInput: ''
+        options:options
      }
+  },
+  components: {
+      'todo' : todo
   },
   watch: {
       // 深层次观察todos内容的变化，包括任务对象(todo)上的变化，并及时存储数据
@@ -155,13 +132,14 @@ export default {
           if(!todo) { this.newTodo = ''; return; }
           // 判断新增任务是否已经存在
           var existTodo =  this.todos.some(function(val){
-                               return val.title === todo;
+                               return val.task === todo;
                            })
           if(existTodo) { return; }
-          this.todos.push({ title: todo, completed: false });
+          this.todos.push({ task: todo, completed: false });
           this.newTodo = '';
       },
       removeTodo: function(todo){
+          console.log(todo);
           // 获取在任务列表中的位置
           var index = this.todos.indexOf(todo);
           // 从数组中移除
@@ -170,86 +148,37 @@ export default {
       removeCompleted: function(){
           this.todos = filters.active(this.todos)
       },
-      editTodo: function(todo){
-          // 若任务已完成 那么不能编辑
-          if(todo.completed) return;
-          this.editedInput = todo.title;
-          this.beforeEditCache = todo.title;
-          this.editedTodo = todo;
-      },
-      doneEdit: function(todo){
-          // editedTodo非空判断，失去焦点时可能为null
-          if(!this.editedTodo) return;
-          var title = this.editedInput.trim();
-          // 若任务内容为空格或空串，那么移除该任务项
-          if(!title){ 
-            this.removeTodo(todo); 
-            this.editedTodo = null;
-            this.editedInput = null;
-            this.beforeEditCache = null;
-            return;
-          } 
-          // 获取任务内容相同的数组
-          var existTodo = this.todos.filter(function(val){
-                                return val.title === title;
-                            });           
-          // 若数量大于0，就说明有重复内容，撤销修改
-          if(existTodo.length>0){ 
-             this.cancelEdit(todo);
-             return;
-          }
-          // 不是上述情况时，保存任务编辑内容
-          todo.title = this.editedInput;
-          this.editedTodo = null;
-          this.editedInput = null;
-          this.beforeEditCache = null;
-      },
-      cancelEdit: function(todo){
-          // 它只是隐藏了编辑框，并没有失去焦点，故它还会调用一次 doneEdit 方法
-          todo.title = this.beforeEditCache
-          this.editedInput = null;
-          this.editedTodo = null;
-          this.beforeEditCache = null;
+      doneEdit: function(task,todo){
+          todo.task = task;
       },
       beforeEnter: function (el) {
-        el.style.opacity = 0
-        el.style.height = 0
-        el.style.border = 0
+          el.style.opacity = 0
+          el.style.height = 0
+          el.style.border = 0
       },
       enter: function (el, done) {
-       // 获取li上data-index的值，延迟执行过渡效果
-       var delay = el.dataset.index * 80
-       // 获取任务内容自适应后的高度
-       var elHeight =el.getElementsByTagName("label")[0].clientHeight
-       el.style.borderBottom = '1px solid #DDD'
-        setTimeout(function () {
-          Velocity(
-            el,
-            { opacity: 1, height: elHeight},
-            { complete: done }
-          )
-        }, delay)
+          // 获取li上data-index的值，延迟执行过渡效果
+          var delay = el.dataset.index * 80
+          // 获取任务内容自适应后的高度
+          var elHeight =el.getElementsByTagName("label")[0].clientHeight
+          el.style.borderBottom = '1px solid #DDD'
+          setTimeout(function () {
+            Velocity(
+              el,
+              { opacity: 1, height: elHeight},
+              { complete: done }
+            )
+          }, delay)
       },
       leave: function (el, done) {
-        var delay = el.dataset.index * 80
-        setTimeout(function () {
-          Velocity(
-            el,
-            { opacity: 0, height: 0},
-            { complete: done }
-          )
-        }, delay)
-      }
-  },
-  directives:{
-      'todo-focus': function(el,binding){
-          if(binding.value){
-            el.focus();
-            // 移动光标至文本末尾
-            if(el.selectionStart===0){
-               el.selectionStart = el.value.length;
-            }
-          }
+          var delay = el.dataset.index * 80
+          setTimeout(function () {
+            Velocity(
+              el,
+              { opacity: 0, height: 0},
+              { complete: done }
+            )
+          }, delay)
       }
   }
 }
@@ -392,7 +321,7 @@ body {
   color: #af5b5e;
 }
 .todo-li .view .destory:after{
-  content: '×';
+  content: 'X';
 }
 .todo-li:hover .view .destory{
   display: block
