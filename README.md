@@ -227,3 +227,21 @@ todos和todo是要传递的参数，而doneEdit和removeTodo是监听事件，�
 1. 把底部过滤选项整合到options对象中，再通过v-for遍历循环出来
 2. 把todo对象里的title属性改名为task,名称更直观一点
 3. 实现过渡效果必要的:key的值修改为`todo.task`，因为它能减少性能的损耗，尤其是任务内容多的时候，之前的key值会在切换路由后重新加载整个任务列表，哪怕没有内容变化(效果好看？)，性能没有达到优化。
+
+
+## step-12：运用Vuex进行状态管理
+### 目标
+1. 运用Vuex管理todos应用的数据，使得数据的每次改变都是可跟踪的
+
+### 实施内容
+1. 把todos和visibility数据放入到state对象中进行管理，提交mutation是更改todos数据的唯一方法。
+2. 把所有能直接影响todos和state数据的操作抽离出来，变成mutation来操作todos数据，包括有addTodo、removeTodo、removeCompleted、doneEdit、toggleTodo、toggleAll和changeVisibility
+3. 官方建议把mutation传入的参数(载荷)定义为对象，同时抽离mutation事件类型到mutation-type.js的文件中，方便查看都有哪些mutation
+4. 把filteredTodos和remaining数据的获取通过store的getter来管理
+5. 自定义store插件来管理数据的存储
+
+### 实施要点
+1. 运用vue实例的生命周期created选项，在实例观测数据和初始化事件之后调用，检查过滤选项visibility是否正确，并提交mutation给store当作它的初始值
+2. 修改todos和visibility数据，只能通过mutation提交，而且这个数据也包括todos内的todo内容的修改，对于todos和visibility数据的获取，它们应该被写入到computed属性中
+3. 由于双向绑定容易不经过mutation就修改了数据，所以不建议使用。当然也可以通过双向绑定computed属性值，再显式定义getter和setting方法来获取和提交mutation
+4. 自定义的store插件能够在每次mutation提交时都调用到，所以这很适合调用存储数据的方法

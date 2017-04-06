@@ -4,9 +4,9 @@ function WebStorage(saveKey){
 	this.fetch =  function(){
 		// JSON解析错误 则重置存储的数据
 		try{
-		     var data = JSON.parse(localStorage.getItem(saveKey) || '[]');
+		     var data = JSON.parse(window.localStorage.getItem(saveKey) || '[]');
 		}catch(e){
-			localStorage.setItem(saveKey,JSON.stringify('[]'));
+			window.localStorage.setItem(saveKey,JSON.stringify('[]'));
 			data=[];
 		}
 		return data;
@@ -14,7 +14,7 @@ function WebStorage(saveKey){
 	// 获取saveKey，不存在则'default'赋值给saveKey，然后对需要保存的数据序列化成JSON字符串，并保存到浏览器中
 	this.save = function(data){
 		if(!saveKey) saveKey = 'default';
-		localStorage.setItem(saveKey,JSON.stringify(data));
+		window.localStorage.setItem(saveKey,JSON.stringify(data));
 	};
 }
 

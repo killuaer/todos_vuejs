@@ -4,10 +4,11 @@
       <!--todo视图-->
       <section class="view">
         <input type="checkbox" 
-               v-model="todo.completed" 
+               :checked="todo.completed"
+               @change="toggleTodo({ 'todo': todo })"
                class="state-toggle" />
         <label @dblclick="editTodo(todo)">{{todo.task}}</label>
-        <button @click="removeTodo(todo)" class="destory" ></button>
+        <button @click="removeTodo({ 'todo': todo })" class="destory" ></button>
       </section>
       <!--todo编辑框-->
       <input type="text" 
@@ -21,20 +22,23 @@
 </template>
 
 <script>
+import { mapMutations } from 'vuex'
+
 export default {
 	name: 'todo',
-	props: ['todo','todos'],
+	props: ['todo'],
 	data:function(){
 		return {
 			 editedTodo: false,
 			 // 缓存任务编辑框的值，不直接修改todo.task，避免触发ul更新，导致编辑框失去焦点
-       		 editedInput: ''
+       editedInput: ''
 		}
 	},
 	methods:{
-	  removeTodo:function(todo){
-	  	  this.$emit('removeTodo',todo);
-	  },
+      ...mapMutations([
+        'toggleTodo',
+        'removeTodo'
+      ]),
       editTodo: function(todo){
           // 若任务已完成 那么不能编辑
           if(todo.completed) return;
@@ -48,14 +52,14 @@ export default {
           var task = this.editedInput.trim();
           // 若任务内容为空格或空串，那么移除该任务项
           if(!task){ 
-            this.removeTodo(todo); 
+            this.removeTodo({ 'todo': todo }); 
             this.editedTodo = false;
             this.editedInput = null;
             this.beforeEditCache = null;
             return;
           } 
           // 获取任务内容相同的数组
-          var existTodo = this.todos.filter(function(val){
+          var existTodo = this.$store.state.todos.filter(function(val){
                                 return val.task === task;
                             });           
           // 若数量大于0，就说明有重复内容，撤销修改
@@ -64,8 +68,7 @@ export default {
              return;
           }
           // 不是上述情况时，保存任务编辑内容
-          //todo.task = this.editedInput;
-          this.$emit('doneEdit',this.editedInput,todo);
+          this.$store.commit('doneEdit',{ 'todo':todo,'task': this.editedInput});
           this.editedTodo = false;
           this.editedInput = null;
           this.beforeEditCache = null;

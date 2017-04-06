@@ -4,13 +4,16 @@
     <header class="header">
       <h2>todos</h2>
       <input type="checkbox" 
-             v-model="allDone" 
+             :checked="allChecked"
+             @change="toggleAll({ completed: !allChecked })"
              class="todoState-all" 
              v-show="todos.length" />
       <input type="text" 
-             class="todo-input" 
-             v-model="newTodo" 
-             @keyup.enter="addTodo" placeholder="请输入想添加的任务" />
+             class="todo-input"
+             autofocus
+             autocomplete="off"   
+             @keyup.enter="addTodo" 
+             placeholder="请输入想添加的任务" />
     </header>
 
     <!--todos主体-->
@@ -26,10 +29,7 @@
       >
         <todo v-for=" (todo,index) in filteredTodos " 
               :todo="todo" 
-              :todos="todos"
-              :key="todo.task"
-              @doneEdit="doneEdit"
-              @removeTodo="removeTodo"></todo>
+              :key="todo.task" ></todo>
       </transition-group>
     </section>
 
@@ -53,26 +53,11 @@
 </template>
 
 <script>
-import WebStorage from '../common/webStorage.js'
 import Velocity from 'velocity-animate'
-import todo from './Todo.vue'
+import Todo from './Todo.vue'
+import { mapMutations } from 'vuex'
 
-// 根据不同的过滤项返回不同的过滤方法
-var filters = {
-  all: function (todos){
-      return todos;
-  },
-  active: function (todos){
-      return todos.filter(function(todo){
-          return !todo.completed; 
-      });
-  },
-  completed: function (todos){
-      return todos.filter(function(todo){
-          return todo.completed;                
-      });
-  }
-}
+
 
 // 过滤选项
 var options = {"all":"全部", "active":"未完成", "completed":"已完成"}
@@ -80,76 +65,62 @@ var options = {"all":"全部", "active":"未完成", "completed":"已完成"}
 export default {
   name: 'todosApp',
   data: function(){
-     return {
-        newTodo: '',   
-        todos: WebStorage("todos-vuejs").fetch(),   
-        visibility: this.$route.params.visibility,
+     return { 
         options:options
      }
   },
   components: {
-      'todo' : todo
+      'Todo' : Todo
   },
   watch: {
-      // 深层次观察todos内容的变化，包括任务对象(todo)上的变化，并及时存储数据
-      todos: {
-          handler: function (todos){
-              WebStorage("todos-vuejs").save(todos)
-          },
-          deep: true
-      },
       // 检测通过router-link 提交的路由变化,并获取过滤选项值
       $route (to, from) {
-          this.visibility = to.params.visibility;
+          this.changeVisibility({'visibility':to.params.visibility}) 
       }
      
   },
+  created: function() {
+      // 判断地址栏输入的链接是否符合过滤规则，不符合就返回全部任务内容
+      let visibility = this.$route.params.visibility;
+
+      visibility = Object.keys(this.options).indexOf(visibility)>0?visibility : 'all';
+
+      this.changeVisibility({'visibility':visibility}) 
+  },
   computed: {
-      allDone: {
-          get: function(){
-              return this.remaining === 0;
-          },
-          set: function(state){
-              this.todos.forEach(function(todo){
-                  todo.completed = state;
-              });
-          }
+      todos: function(){
+          return this.$store.state.todos;
+      },
+      visibility: function(){
+          return this.$store.state.visibility;
+      },
+      allChecked: function(){
+          // 只要有一个任务没有完成那么就返回false,即全选框不勾上
+          return this.todos.every(function(todo){
+                return todo.completed;
+          })
       },
       filteredTodos: function(){
-         // 判断地址栏输入的链接是否符合过滤规则，不符合就返回全部任务内容
-           this.visibility = ['all','active','completed'].indexOf(this.visibility)>0?this.visibility : 'all';
-          return filters[this.visibility](this.todos);
+          return  this.$store.getters.filteredTodos;
       },
       remaining: function(){
-         // 返回未完成任务的数量 
-          return filters.active(this.todos).length
+          // 返回未完成任务的数量 
+          return this.$store.getters.remaining;
       }
   },
   methods: {
-      addTodo: function(){
+      addTodo: function(e){
           // 判断新增任务是否为空串
-          var todo = this.newTodo.trim();
-          if(!todo) { this.newTodo = ''; return; }
+          var task = e.target.value.trim();
+          if(!task) { e.target.value = ''; return; }
           // 判断新增任务是否已经存在
           var existTodo =  this.todos.some(function(val){
-                               return val.task === todo;
+                               return val.task === task;
                            })
           if(existTodo) { return; }
-          this.todos.push({ task: todo, completed: false });
-          this.newTodo = '';
-      },
-      removeTodo: function(todo){
-          console.log(todo);
-          // 获取在任务列表中的位置
-          var index = this.todos.indexOf(todo);
-          // 从数组中移除
-          this.todos.splice(index,1);
-      },
-      removeCompleted: function(){
-          this.todos = filters.active(this.todos)
-      },
-      doneEdit: function(task,todo){
-          todo.task = task;
+
+          this.$store.commit('addTodo',{"task":task});
+          e.target.value = '';
       },
       beforeEnter: function (el) {
           el.style.opacity = 0
@@ -179,7 +150,12 @@ export default {
               { complete: done }
             )
           }, delay)
-      }
+      },
+      ...mapMutations([
+        'toggleAll',
+        'removeCompleted',
+        'changeVisibility'
+      ])
   }
 }
 </script>
@@ -350,8 +326,9 @@ body {
 .footer{
   position: relative;
   text-align: center;
+  height: 16px;
   color: #777;
-  padding: 10px 23px 32px;
+  padding: 10px 20px;
   border: 1px solid #DDD;
 }
 .footer .todo-count {
