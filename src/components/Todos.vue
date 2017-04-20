@@ -19,15 +19,14 @@
     <!--todos主体-->
     <section class="main">
       <!--过渡组件-->
-      <transition-group
-        class="todo-ul"
-        tag="ul"
-        v-bind:css="false"
-        v-on:before-enter="beforeEnter"
-        v-on:enter="enter"
-        v-on:leave="leave"
-      >
-        <todo v-for=" (todo,index) in filteredTodos " 
+      <transition-group class="todo-ul"
+                        tag="ul"
+                        :css="false"
+                        @before-enter="beforeEnter"
+                        @enter="enter"
+                        @leave="leave"
+                      >
+        <todo v-for=" todo in filteredTodos " 
               :todo="todo" 
               :key="todo.task" ></todo>
       </transition-group>
@@ -53,103 +52,96 @@
 </template>
 
 <script>
-import Velocity from 'velocity-animate'
-import Todo from './Todo.vue'
-import { mapMutations } from 'vuex'
-
-
+import Velocity from 'velocity-animate';
+import Todo from './Todo.vue';
+import { mapMutations } from 'vuex';
 
 // 过滤选项
-var options = {"all":"全部", "active":"未完成", "completed":"已完成"}
+let options = {'all': '全部', 'active': '未完成', 'completed': '已完成'};
 
 export default {
   name: 'todosApp',
-  data: function(){
-     return { 
-        options:options
-     }
+  data () {
+     return {
+        options
+     };
   },
   components: {
-      'Todo' : Todo
+      Todo
   },
   watch: {
       // 检测通过router-link 提交的路由变化,并获取过滤选项值
-      $route (to, from) {
-          this.changeVisibility({'visibility':to.params.visibility}) 
+      $route ({ params }, from) {
+          this.changeVisibility({'visibility': params.visibility});
       }
-     
   },
-  created: function() {
+  created () {
       // 判断地址栏输入的链接是否符合过滤规则，不符合就返回全部任务内容
       let visibility = this.$route.params.visibility;
 
-      visibility = Object.keys(this.options).indexOf(visibility)>0?visibility : 'all';
+      visibility = Object.keys(this.options).indexOf(visibility) > 0 ? visibility : 'all';
 
-      this.changeVisibility({'visibility':visibility}) 
+      this.changeVisibility({visibility});
   },
   computed: {
-      todos: function(){
+      todos () {
           return this.$store.state.todos;
       },
-      visibility: function(){
+      visibility () {
           return this.$store.state.visibility;
       },
-      allChecked: function(){
+      allChecked () {
           // 只要有一个任务没有完成那么就返回false,即全选框不勾上
-          return this.todos.every(function(todo){
-                return todo.completed;
-          })
+          return this.todos.every((todo) => todo.completed);
       },
-      filteredTodos: function(){
-          return  this.$store.getters.filteredTodos;
+      filteredTodos () {
+          return this.$store.getters.filteredTodos;
       },
-      remaining: function(){
-          // 返回未完成任务的数量 
+      remaining () {
+          // 返回未完成任务的数量
           return this.$store.getters.remaining;
       }
   },
   methods: {
-      addTodo: function(e){
+      addTodo (e) {
           // 判断新增任务是否为空串
           var task = e.target.value.trim();
-          if(!task) { e.target.value = ''; return; }
+          if (!task) {
+            e.target.value = '';
+            return;
+          }
           // 判断新增任务是否已经存在
-          var existTodo =  this.todos.some(function(val){
-                               return val.task === task;
-                           })
-          if(existTodo) { return; }
+          var existTodo = this.todos.some((val) => val.task === task);
+          if (existTodo) return;
 
-          this.$store.commit('addTodo',{"task":task});
+          this.$store.commit('addTodo', {task});
           e.target.value = '';
       },
-      beforeEnter: function (el) {
-          el.style.opacity = 0
-          el.style.height = 0
-          el.style.border = 0
+      beforeEnter (el) {
+          el.style.opacity = 0;
+          el.style.height = 0;
       },
-      enter: function (el, done) {
-          // 获取li上data-index的值，延迟执行过渡效果
-          var delay = el.dataset.index * 80
+      enter (el, done) {
+          var delay = 100;
           // 获取任务内容自适应后的高度
-          var elHeight =el.getElementsByTagName("label")[0].clientHeight
-          el.style.borderBottom = '1px solid #DDD'
-          setTimeout(function () {
+          var elHeight = el.getElementsByTagName('label')[0].clientHeight;
+          setTimeout(() => {
             Velocity(
               el,
-              { opacity: 1, height: elHeight},
-              { complete: done }
-            )
-          }, delay)
+              {opacity: 1, height: elHeight},
+              {complete: done}
+            );
+          }, delay);
       },
-      leave: function (el, done) {
-          var delay = el.dataset.index * 80
-          setTimeout(function () {
+      leave (el, done) {
+          var delay = 100;
+          setTimeout(() => {
             Velocity(
               el,
-              { opacity: 0, height: 0},
-              { complete: done }
-            )
-          }, delay)
+              {opacity: 0, height: 0},
+              {complete: done}
+            );
+          }, delay);
       },
       ...mapMutations([
         'toggleAll',
@@ -157,7 +149,7 @@ export default {
         'changeVisibility'
       ])
   }
-}
+};
 </script>
 
 <style>

@@ -1,8 +1,8 @@
 import Vue from 'vue';
 import Vuex from 'vuex';
 import { mutations } from './mutations';
-import * as getters from './getter'
-import WebStorage from '../common/webStorage'
+import * as getters from './getter';
+import WebStorage from '../common/webStorage';
 
 Vue.use(Vuex);
 
@@ -14,12 +14,13 @@ const state = {
 	todos: storage.fetch(),
 	visibility: ''
 };
-// 自定义插件
-const myPlugin = function(store) {
-	return store.subscribe(function(mutations,state) {
-		storage.save(state.todos);
+
+// 自定义插件 每次提交mutation 都会调用一次
+const myPlugin = store => {
+	store.subscribe((mutations, {todos}) => {
+		storage.save(todos);
 	});
-}
+};
 
 export default new Vuex.Store({
 	state,
@@ -27,5 +28,3 @@ export default new Vuex.Store({
 	getters,
 	plugins: [myPlugin]
 });
-
-

@@ -245,3 +245,55 @@ todos和todo是要传递的参数，而doneEdit和removeTodo是监听事件，�
 2. 修改todos和visibility数据，只能通过mutation提交，而且这个数据也包括todos内的todo内容的修改，对于todos和visibility数据的获取，它们应该被写入到computed属性中
 3. 由于双向绑定容易不经过mutation就修改了数据，所以不建议使用。当然也可以通过双向绑定computed属性值，再显式定义getter和setting方法来获取和提交mutation
 4. 自定义的store插件能够在每次mutation提交时都调用到，所以这很适合调用存储数据的方法
+
+
+## step-13：转化成ES6语法和用eslint规范代码风格
+### 目标
+1. 用ES6语法简化js代码
+2. 运用eslint规范代码风格
+
+### 实施内容
+1. ES6语法主要使用了箭头函数、函数参数的解构赋值、Class、属性和方法的简写
+2. eslint的配置和使用，参考vue-cli的配置
+3. 善用原生的DOM操作，vue实例方法的第一个参数默认接收绑定该事件元素的Event对象，从而可以获取和操作该元素下的数据
+
+### 实施要点
+1. 运用箭头函数的场景：
+	* 无复杂逻辑或无副作用的纯函数，例如map、reduce、filter的回调函数
+	* 不要在最外层定义箭头函数，因为在函数内部操作this会很容易污染全局作用域，最起码要在箭头函数外部包含一层普通函数，将this控制在可见的范围内。（箭头函数没有自己的this、argument和caller）
+	* 多层函数嵌套不大适用于箭头函数，这会影响阅读性和函数作用范围的识别
+2. 对象属性和方法的简写
+```
+let name = '张三';
+let obj = {
+	name: name,
+	say: function () {
+		console.log(`我的名字是${this.name}`);
+	}
+}
+obj.say();
+
+// 相当于下面代码
+let name2 = '张三2';
+let obj2 = {
+	name2,
+	say () {
+		console.log(`我的名字是${this.name2}`)
+	}
+}
+obj2.say();
+```
+3. 函数参数的解构赋值
+```
+function add ([x, y]) {
+	return x + y;
+}
+add([1, 2]);  // 3
+
+function move ({x, y}){
+	return [x, y];
+}
+move({x:3, y:8})  // [3, 8]
+```
+
+

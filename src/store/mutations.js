@@ -1,33 +1,33 @@
-import * as types from './mutation-types'
+import * as types from './mutation-types';
 
 export const mutations = {
-	[types.ADDTODO]: function(state,obj) {
-		state.todos.push({
-			task: obj.task,
-			completed: false
-		});
+	// 添加任务
+	[types.ADDTODO] (state, {task}) {
+		state.todos.push({ task, completed: false });
 	},
-	[types.REMOVETODO]: function(state,obj){
-		state.todos.splice(state.todos.indexOf(obj.todo),1);
+	// 移除任务
+	[types.REMOVETODO] (state, {todo}) {
+		state.todos.splice(state.todos.indexOf(todo), 1);
 	},
-	[types.REMOVECOMPLETED]: function(state){
-		state.todos = state.todos.filter(function(todo){
-			return !todo.completed;
-		});
+	// 移除已完成任务
+	[types.REMOVECOMPLETED] (state) {
+		state.todos = state.todos.filter((todo) => !todo.completed);
 	},
-	[types.DONEEDIT]: function(state,obj){
-		obj.todo.task = obj.task;
+	// 完成任务编辑
+	[types.DONEEDIT] (state, {todo, task}) {
+		todo.task = task;
 	},
-	[types.TOGGLETODO]: function(state,obj){
-		obj.todo.completed = !obj.todo.completed;
+	// 修改某个任务的状态
+	[types.TOGGLETODO] (state, {todo}) {
+		todo.completed = !todo.completed;
 	},
-	[types.TOGGLEALL]: function(state,obj){
-		state.todos.forEach(function(todo){
-			todo.completed = obj.completed;
-		});
+	// 任务全完成/未完成
+	[types.TOGGLEALL] (state, {completed}) {
+		state.todos.forEach((todo) => (todo.completed = completed));
 	},
-	[types.CHANGEVISIBILITY]: function(state,obj){
-		state.visibility = obj.visibility;
+	// 改变路由选项
+	[types.CHANGEVISIBILITY] (state, {visibility}) {
+		state.visibility = visibility;
 	}
 };
 
