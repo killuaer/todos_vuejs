@@ -5,6 +5,7 @@ import VueRouter from 'vue-router';
 
 import App from './App.vue';
 import routes from './config/routes.js';
+import store from './store';
 
 Vue.use(VueRouter);
 const router = new VueRouter({
@@ -14,7 +15,8 @@ const router = new VueRouter({
 
 /* eslint-disable no-new */
 new Vue({
+  store,
   router,
   el: '#app',
-  render:(h) => h(App)
-})
+  render: (h) => h(App)
+});

@@ -205,4 +205,101 @@ npm run build
 3. DOM数据更新时，:key值一定要不一样，不然会造成复用，从而达不到想要的效果。比如说，:key=index时，共有三项，移除第一项，会发现下面有过渡效果，而不是移除项有过渡效果。故:key=todo.title+visibility，这样切换过滤项时，也会有过渡效果。
 
 
+## step-11：抽离出Todo.vue组件
+### 目标
+1. 从Todos.vue中抽离出Todo.vue,使功能区分更明确
+
+### 实施内容
+1. 父组件(Todos.vue)传递给子组件(Todo.vue)的参数，除了需要绑定到子组件上，还需要在子组件的props属性上声明，而子组件反馈数据给父组件是通过事件，它需要在子组件上绑定监听事件，通过在子组件内this.$emit('even','args')触发父组件上的监听事件，切记，定义在子组件上的监听事件不要加传参的括号,不然它会误认为是父组件上的参数获取，而不是子组件的参数获取
+```
+<todo v-for=" (todo,index) in filteredTodos " 
+          :todo="todo" 
+          :todos="todos"
+          :key="todo.task"
+          @doneEdit="doneEdit"
+          @removeTodo="removeTodo"></todo>
+```
+todos和todo是要传递的参数，而doneEdit和removeTodo是监听事件，等待子组件的触发。
+2. 在Todo.vue中，由于每个组件都有自己的editedTodo，而不是共享同一个，所以不需要判断`editedTodo==todo`来确定哪个需要编辑，只需要判断true/false即可
+3. 基于官方的建议，不应该在子组件内修改父组件的值，所以才会添加一个doneEdit的监听事件，不然直接用`todo.task = this.editedInput`即可修改任务内容
+
+### 修复内容
+1. 把底部过滤选项整合到options对象中，再通过v-for遍历循环出来
+2. 把todo对象里的title属性改名为task,名称更直观一点
+3. 实现过渡效果必要的:key的值修改为`todo.task`，因为它能减少性能的损耗，尤其是任务内容多的时候，之前的key值会在切换路由后重新加载整个任务列表，哪怕没有内容变化(效果好看？)，性能没有达到优化。
+
+
+## step-12：运用Vuex进行状态管理
+### 目标
+1. 运用Vuex管理todos应用的数据，使得数据的每次改变都是可跟踪的
+
+### 实施内容
+1. 把todos和visibility数据放入到state对象中进行管理，提交mutation是更改todos数据的唯一方法。
+2. 把所有能直接影响todos和state数据的操作抽离出来，变成mutation来操作todos数据，包括有addTodo、removeTodo、removeCompleted、doneEdit、toggleTodo、toggleAll和changeVisibility
+3. 官方建议把mutation传入的参数(载荷)定义为对象，同时抽离mutation事件类型到mutation-type.js的文件中，方便查看都有哪些mutation
+4. 把filteredTodos和remaining数据的获取通过store的getter来管理
+5. 自定义store插件来管理数据的存储
+
+### 实施要点
+1. 运用vue实例的生命周期created选项，在实例观测数据和初始化事件之后调用，检查过滤选项visibility是否正确，并提交mutation给store当作它的初始值
+2. 修改todos和visibility数据，只能通过mutation提交，而且这个数据也包括todos内的todo内容的修改，对于todos和visibility数据的获取，它们应该被写入到computed属性中
+3. 由于双向绑定容易不经过mutation就修改了数据，所以不建议使用。当然也可以通过双向绑定computed属性值，再显式定义getter和setting方法来获取和提交mutation
+4. 自定义的store插件能够在每次mutation提交时都调用到，所以这很适合调用存储数据的方法
+
+
+## step-13：转化成ES6语法和用eslint规范代码风格
+### 目标
+1. 用ES6语法简化js代码
+2. 运用eslint规范代码风格
+
+### 实施内容
+1. ES6语法主要使用了箭头函数、函数参数的解构赋值、Class、属性和方法的简写
+2. eslint的配置和使用，参考vue-cli的配置
+3. 善用原生的DOM操作，vue实例方法的第一个参数默认接收绑定该事件元素的Event对象，从而可以获取和操作该元素下的数据
+
+### 实施要点
+1. 运用箭头函数的场景：
+	* 无复杂逻辑或无副作用的纯函数，例如map、reduce、filter的回调函数
+	* 不要在最外层定义箭头函数，因为在函数内部操作this会很容易污染全局作用域，最起码要在箭头函数外部包含一层普通函数，将this控制在可见的范围内。（箭头函数没有自己的this、argument和caller）
+	* 多层函数嵌套不大适用于箭头函数，这会影响阅读性和函数作用范围的识别
+2. 对象属性和方法的简写
+```
+let name = '张三';
+let obj = {
+	name: name,
+	say: function () {
+		console.log(`我的名字是${this.name}`);
+	}
+}
+obj.say();
+
+// 相当于下面代码
+let name2 = '张三2';
+let obj2 = {
+	name2,
+	say () {
+		console.log(`我的名字是${this.name2}`)
+	}
+}
+obj2.say();
+```
+3. 函数参数的解构赋值
+```
+function add ([x, y]) {
+	return x + y;
+}
+add([1, 2]);  // 3
+
+function move ({x, y}){
+	return [x, y];
+}
+move({x:3, y:8})  // [3, 8]
+```
+
+
+## step-14：flex布局、less运用和重复数据提示
+1. 页面布局采用了flex弹性布局，运用less对样式重新编写，规范样式属性编写顺序，定位属性写在最前面，其次是盒模型属性，最后是只影响自身内部的样式属性
+2. 页面的显示是移动设备优先，同时处理了手机横屏和竖屏时，页面自适应的处理
+3. 为输入框添加了重复数据提示，当内容为重复数据输入框就会有一个红色的边框阴影，这就需要处理@input事件，同时在watch选项中添加todos，深度检测todos的变化，判断是否需要边框阴影
+4. 为todos底部添加过渡效果，并优化任务列表的过渡效果的显示
 

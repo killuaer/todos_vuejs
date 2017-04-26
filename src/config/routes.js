@@ -2,11 +2,11 @@ import todos from '../components/Todos.vue';
 
 export default [
 	{
-		path:'/',
+		path: '/',
 		redirect: '/todos/all'
-	},	
+	},
 	{
-		path:'/todos/:visibility',
+		path: '/todos/:visibility',
 		component: todos
 	}
-]
+];
